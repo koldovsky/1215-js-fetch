@@ -1,35 +1,13 @@
-const products = [
-    {
-        id: '1',
-        title: 'Baby Yoda',
-        description: 'An adorable illustration of Baby Yoda, capturing the beloved character from the Star Wars universe in a cute, minimalist style. Perfect for fans of all ages.',
-        image: 'img/baby-yoda.svg',
-        price: 9.99
-    },
-    {
-        id: '2',
-        title: 'Banana',
-        description: 'A vibrant and detailed SVG illustration of a banana. Ideal for educational projects, children\'s books, or any digital content aiming to showcase healthy food.',
-        image: 'img/banana.svg',
-        price: 12.99
-    },
-    {
-        id: '3',
-        title: 'Girl',
-        description: 'A beautifully detailed illustration of a young girl, styled in a modern, cartoon-like manner. Great for use in apps, books, or any media targeted at a younger audience.',
-        image: 'img/girl.svg',
-        price: 8.99
-    },
-    {
-        id: '4',
-        title: 'Viking',
-        description: 'A powerful and striking illustration of a Viking warrior. This SVG captures the fierce essence of Viking culture, perfect for historical content, games, or themed decorations.',
-        image: 'img/viking.svg',
-        price: 7.99
-    },
-];
+const response = await fetch('api/products.json');
+const products = await response.json();
+renderProducts(products);
 
-function renderProducts(products) {
+// Старий запис з .then
+// fetch('api/products.json')
+//  .then( response => response.json() )
+//  .then( products => renderProducts(products) );
+
+function renderProducts(products, rate = 1) {
     let productsHtml = '';
     for (const product of products) {
         productsHtml += `
@@ -42,7 +20,7 @@ function renderProducts(products) {
                     Info
                 </button>
                 <button class="product-card__buttons-buy button button-card">
-                    Buy ${product.price}
+                    Buy ${(product.price * rate).toFixed(2)}
                 </button>
             </div>
         </article>`;
@@ -50,4 +28,17 @@ function renderProducts(products) {
     const productContainer = document.querySelector('.products__list');
     productContainer.innerHTML = productsHtml;
 }
-renderProducts(products);
+
+const productsCurrency = document.querySelector('.products__currency');
+productsCurrency.addEventListener('change', changeCurrency);
+
+let currencies;
+async function changeCurrency() {
+    if (!currencies) {
+        const response = await fetch('https://api.exchangerate-api.com/v4/latest/USD');
+        currencies = await response.json();
+    }
+    const convertTo = productsCurrency.value;
+    const rate = currencies.rates[convertTo];
+    renderProducts(products, rate);
+}
